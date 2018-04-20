@@ -1,0 +1,54 @@
+
+#server config
+server:
+  port: 8000
+  tomcat:
+    max-threads: 128
+    min-spare-threads: 64
+#log config
+logging:
+  file: logs/${spring.application.name}.log
+  level:
+    root: INFO
+    com.github.rench: DEBUG
+    org.hibernate.SQL: INFO
+    org.hibernate.type: INFO
+#spring config
+spring:
+  application:
+    name: phi-ddw
+  mvc:
+    favicon:
+      enabled: true
+    mvc:
+      static-path-pattern: /**
+      throw-exception-if-no-handler-found: true
+  datasource:
+    testWhileIdle: true
+    validationQuery: select 1
+    url: jdbc:mysql://localhost:3306/phi-ddw?useUnicdoe=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+    username: root
+    password: root
+    sql-script-encoding: utf-8
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  messages:
+    encoding: UTF-8
+    basename: messages
+  http:
+    encoding:
+      charset: UTF-8
+  jackson:
+    default-property-inclusion: non_null
+    serialization.write-null-map-values: false

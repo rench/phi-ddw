@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameter
 import org.web3j.protocol.core.DefaultBlockParameterName
+import org.web3j.protocol.core.methods.response.EthBlock
 import org.web3j.protocol.core.methods.response.Transaction
 import org.web3j.protocol.http.HttpService
 import org.web3j.utils.Convert
@@ -80,8 +81,17 @@ object RpcApi {
         )
     }
 
+    /**
+     * query the block info with specified block number
+     */
+    fun getBlock(number: BigInteger): Mono<EthBlock.Block> {
+        return Mono.just(
+                web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(number), false).sendAsync().get().block
+        )
+    }
 
 }
+
 
 fun main(args: Array<String>) {
     //RpcApi.getBalance("0x61f63ddd3ccbfcaaa56dda1e5aa22298e31f53af").subscribe(System.out::print)
