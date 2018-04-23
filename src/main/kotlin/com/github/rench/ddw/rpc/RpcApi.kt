@@ -24,9 +24,7 @@ object RpcApi {
      */
     fun getBalance(address: String) =
             Mono.justOrEmpty(
-                    Convert.fromWei(
-                            web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).sendAsync().get().balance.toString(),
-                            Convert.Unit.ETHER)
+                    web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).sendAsync().get().balance
             )
 
     /**

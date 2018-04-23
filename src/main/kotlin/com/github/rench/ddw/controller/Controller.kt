@@ -6,6 +6,7 @@ import com.github.rench.ddw.domain.Transaction
 import com.github.rench.ddw.service.IAddressService
 import com.github.rench.ddw.service.IBlockService
 import com.github.rench.ddw.service.TransactionService
+import com.github.rench.ddw.vo.FetchResponse
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -95,5 +96,5 @@ class BlockController(private val service: IBlockService) {
      * fetch blocks from current max block
      */
     @RequestMapping("/fetch")
-    fun fetch(): Flux<Block> = service.fetch()
+    fun fetch(): Mono<FetchResponse> = service.fetch()
 }

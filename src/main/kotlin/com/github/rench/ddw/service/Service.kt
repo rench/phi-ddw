@@ -7,9 +7,12 @@ import com.github.rench.ddw.repository.AddressRepository
 import com.github.rench.ddw.repository.BlockRepository
 import com.github.rench.ddw.repository.TransactionRepository
 import com.github.rench.ddw.rpc.RpcApi
+import com.github.rench.ddw.vo.FetchResponse
+import org.hibernate.annotations.Fetch
 import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
 import org.springframework.util.MultiValueMap
+import org.web3j.utils.Convert
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.math.BigInteger
@@ -40,7 +43,7 @@ interface IBlockService {
     fun latest(n: Int): Flux<Block>
     fun block(n: BigInteger): Mono<Block>
     fun hash(h: String): Mono<Block>
-    fun fetch(): Flux<Block>
+    fun fetch(): Mono<FetchResponse>
 }
 
 /**
@@ -128,11 +131,12 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
         }
     }
 
-    override fun fetch(): Flux<Block> {
+    override fun fetch(): Mono<FetchResponse> {
         var block = dao.findFirstByOrderByNumberDesc()
-        var last = (block?.number ?: BigInteger.ONE).longValueExact()
-        var cur = RpcApi.getBlockNumber().block().longValueExact()
-        return Flux.create {
+        var last = (block?.number ?: BigInteger.ZERO).longValueExact()
+        var max = RpcApi.getBlockNumber().block().longValueExact()
+        val cur = kotlin.math.min(last + 10000, max)
+        return Mono.create {
             var fs = mutableListOf<CompletableFuture<Boolean>>()
             var set: MutableSet<String> = HashSet()
             (last + 1..cur).mapTo(fs) { i ->
@@ -170,7 +174,8 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
                     addrDao.save(addr)
                 }
             }
-            it.complete()
+            val resp = FetchResponse(BigInteger.valueOf(cur), BigInteger.valueOf(last), BigInteger.valueOf(max))
+            it.success(resp)
         }
     }
 

@@ -15,7 +15,7 @@ data class Address(
         @Id
         @Column(length = 42)
         var address: String? = null,
-        var balance: BigDecimal? = null,
+        var balance: BigInteger? = null,
         @Column(name = "transaction_count")
         var transactionCount: BigInteger? = null
 )
@@ -62,11 +62,11 @@ data class Block(
         var size: Long? = null,
         @Column(length = 42)
         var miner: String? = null,
-        var difficulty: BigDecimal? = null,
+        var difficulty: BigInteger? = null,
         @Column(name = "gas_limit")
         var gasLimit: BigInteger? = null,
         @Column(name = "gas_used")
-        var gasUsed: BigDecimal? = null,
+        var gasUsed: BigInteger? = null,
         @Column(name = "transaction_count")
         var transactionCount: Long? = null
 )
