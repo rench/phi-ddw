@@ -162,17 +162,20 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
                 }
             }
             CompletableFuture.allOf(*fs.toTypedArray()).join()
+            fs.clear()
             set.forEach {
                 var bal = RpcApi.getBalance(it).block()
+                var addr:Address
                 if (addrDao.existsById(it)) {
-                    addrDao.findById(it).get().balance = bal
+                    addr = addrDao.findById(it).get()
+                    addr.balance = bal
                 } else {
-                    var addr = Address()
+                    addr = Address()
                     addr.address = it
                     addr.balance = bal
                     addr.transactionCount = BigInteger.valueOf(0)
-                    addrDao.save(addr)
                 }
+                addrDao.save(addr)
             }
             val resp = FetchResponse(BigInteger.valueOf(cur), BigInteger.valueOf(last), BigInteger.valueOf(max))
             it.success(resp)

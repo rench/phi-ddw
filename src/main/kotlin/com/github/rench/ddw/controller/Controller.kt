@@ -58,13 +58,13 @@ class AddressController(private val service: IAddressService) {
      * return ddw address info
      */
     @RequestMapping("/{addr}")
-    fun get(@PathVariable("addr") addr: String): Mono<Address> = Mono.empty()
+    fun get(@PathVariable("addr") addr: String): Mono<Address> = service.address(addr)
 
     /**
      * return the top n balance address info
      */
     @RequestMapping("/top/{n}")
-    fun top(@PathVariable("n") n: Int): Flux<Address> = Flux.empty()
+    fun top(@PathVariable("n") n: Int): Flux<Address> = service.top(n)
 }
 
 /**
