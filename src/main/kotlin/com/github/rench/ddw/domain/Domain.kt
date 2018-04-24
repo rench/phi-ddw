@@ -1,8 +1,9 @@
 package com.github.rench.ddw.domain
 
-import java.math.BigDecimal
+import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.math.BigInteger
-import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 
@@ -11,13 +12,20 @@ import javax.persistence.*
  */
 @Entity
 @Table(name = "address", indexes = [Index(columnList = "balance")])
+@EntityListeners(value = AuditingEntityListener::class)
 data class Address(
         @Id
         @Column(length = 42)
         var address: String? = null,
         var balance: BigInteger? = null,
         @Column(name = "transaction_count")
-        var transactionCount: BigInteger? = null
+        var transactionCount: BigInteger? = null,
+        @CreatedDate
+        @Column(name = "created_date")
+        var createdDate: Date? = null,
+        @LastModifiedDate
+        @Column(name = "last_modified_date")
+        var lastModifiedDate: Date? = null
 )
 
 /**
@@ -25,6 +33,7 @@ data class Address(
  */
 @Entity
 @Table(name = "transaction", indexes = [(Index(columnList = "from_address,timestamp")), (Index(columnList = "to_address,timestamp"))])
+@EntityListeners(value = AuditingEntityListener::class)
 data class Transaction(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,7 +53,10 @@ data class Transaction(
         @Column(name = "to_address", length = 42)
         var toAddress: String? = null,
         var value: BigInteger? = null,
-        var timestamp: Long? = null
+        var timestamp: Long? = null,
+        @CreatedDate
+        @Column(name = "created_date")
+        var createdDate: Date? = null
 )
 
 /**
@@ -53,6 +65,7 @@ data class Transaction(
 
 @Entity
 @Table(name = "block", indexes = [Index(columnList = "hash"), Index(columnList = "miner")])
+@EntityListeners(value = AuditingEntityListener::class)
 data class Block(
         @Id
         var number: BigInteger? = null,
@@ -68,6 +81,11 @@ data class Block(
         @Column(name = "gas_used")
         var gasUsed: BigInteger? = null,
         @Column(name = "transaction_count")
-        var transactionCount: Long? = null
+        var transactionCount: Long? = null,
+        @CreatedDate
+        @Column(name = "created_date")
+        var createdDate: Date? = null,
+        @Transient
+        var txs: List<Transaction>? = null
 )
 

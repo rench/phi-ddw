@@ -1,0 +1,166 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta http-equiv="Content-Language" content="en" />
+    <meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="theme-color" content="#4188c9">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <title>Phi-DDW Explorer - by github.com/rench - a responsive, flat and full featured admin template</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,400,400i,500,500i,600,600i,700,700i&amp;subset=latin-ext">
+    <script src="/assets/js/require.min.js"></script>
+    <script>
+      requirejs.config({
+          baseUrl: '.'
+      });
+    </script>
+    <!-- Dashboard Core -->
+    <link href="/assets/css/dashboard.css" rel="stylesheet" />
+    <script src="/assets/js/dashboard.js"></script>
+    <!-- c3.js Charts Plugin -->
+    <link href="/assets/plugins/charts-c3/plugin.css" rel="stylesheet" />
+    <script src="/assets/plugins/charts-c3/plugin.js"></script>
+    <!-- Input Mask Plugin -->
+    <script src="/assets/plugins/input-mask/plugin.js"></script>
+  </head>
+  <body class="">
+    <div class="page">
+      <div class="page-main">
+        <div class="header py-4">
+          <div class="container">
+            <div class="d-flex">
+              <a class="header-brand" href="/index">
+                <span>Phi-DDW</span>
+              </a>
+              <div class="d-flex order-lg-2 ml-auto">
+                <div class="nav-item d-none d-md-flex">
+                  <a href="https://github.com/rench/phi-ddw" class="btn btn-sm btn-outline-primary" target="_blank">Source Code</a>
+                </div>
+              <a href="#" class="header-toggler d-lg-none ml-3 ml-lg-0" data-toggle="collapse" data-target="#headerMenuCollapse">
+                <span class="header-toggler-icon"></span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="header collapse d-lg-flex p-0" id="headerMenuCollapse">
+          <div class="container">
+            <div class="row align-items-center">
+              <div class="col-lg-3 ml-auto">
+                <form class="input-icon my-3 my-lg-0">
+                  <input type="search" class="form-control header-search" placeholder="Search&hellip;" tabindex="1">
+                  <div class="input-icon-addon">
+                    <i class="fe fe-search"></i>
+                  </div>
+                </form>
+              </div>
+              <div class="col-lg order-lg-first">
+                  <ul class="nav nav-tabs border-0 flex-column flex-lg-row">
+                    <li class="nav-item">
+                      <a href="/index" class="nav-link"><i class="fe fe-home"></i>Home</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link active"><i class="fe fe-box"></i>Blocks</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link"><i class="fe fe-calendar"></i>Transactions</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link"><i class="fe fe-file-text"></i>Address</a>
+                    </li>
+                  </ul>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div class="my-3 my-md-5">
+          <div class="container" th:object="${block}">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title" th:text="*{number}">#951511</h3>
+              </div>
+              <div class="card-body">
+                <div class="row my-8">
+                  <div class="col-6">
+                    <p class="h3">Block Info</p>
+                    <address>
+                      Height: <span th:text="*{number}">number</span><br>
+                      Hash: <span th:text="*{hash}">hash</span><br>
+                      Difficulty: <span th:text="*{difficulty}">Difficulty</span><br>
+                      GasLimit: <span th:text="*{gasLimit}">GasLimit</span><br>
+                      Miner: <span th:text="*{miner}">miner</span>
+                    </address>
+                  </div>
+                </div>
+                <div class="table-responsive push">
+                  <table class="table table-bordered table-hover">
+                    <tr>
+                      <th class="text-center" style="width: 1%"></th>
+                      <th class="text-center">Transaction Hash</th>
+                      <th class="text-center">From</th>
+                      <th class="text-center">To</th>
+                      <th class="text-center" style="width: 1%">Value</th>
+                    </tr>
+                    <tr th:each="tx : *{txs}">
+                      <td class="text-center">*</td>
+                      <td class="text-center" th:text="${tx.hash}"></td>
+                      <td class="text-center" th:text="${tx.fromAddress}">0xd2476de5374c40231180a1f1f0547d6ba571cedf</td>
+                      <td class="text-center" th:text="${tx.toAddress}">0xc748bbc21666f8ea7df4a0d3481bc4de7c6b59e6</td>
+                      <td class="text-center" th:text="${tx.value}/100000000000000000">10000</td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8">
+              <div class="row">
+                <div class="col-6 col-md-3">
+                  <ul class="list-unstyled mb-0">
+                    <li><a href="http://www.phicomm.com/cn/index.php/Products/none_details.html">Phi-DDW Products</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 mt-4 mt-lg-0">
+              Phi-DDW BlockChain Explorer
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <div class="container">
+          <div class="row align-items-center flex-row-reverse">
+            <div class="col-auto ml-lg-auto">
+              <div class="row align-items-center">
+                <div class="col-auto">
+                  <a href="https://github.com/rench/phi-ddw" class="btn btn-outline-primary btn-sm">phi-ddw Source code</a>
+                </div>
+                <div class="col-auto">
+                  <a href="https://github.com/tabler/tabler" class="btn btn-outline-primary btn-sm">Tabler Source code</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-auto mt-3 mt-lg-0 text-center">
+              Copyright © 2018 <a href=".">Phi-DDW</a>. Theme by Tabler All rights reserved.
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

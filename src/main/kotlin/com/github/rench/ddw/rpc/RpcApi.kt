@@ -8,7 +8,6 @@ import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.protocol.core.methods.response.EthBlock
 import org.web3j.protocol.core.methods.response.Transaction
 import org.web3j.protocol.http.HttpService
-import org.web3j.utils.Convert
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.math.BigInteger
@@ -18,7 +17,7 @@ import java.math.BigInteger
  */
 object RpcApi {
     val LOG: Logger = LoggerFactory.getLogger(RpcApi::class.java)
-    val web3j: Web3j = Web3j.build(HttpService("http://localhost:8200"))
+    val web3j: Web3j = Web3j.build(HttpService("http://192.168.1.123:8200"))
     /**
      * query the balance with specified address from  rpc client
      */
@@ -91,7 +90,7 @@ object RpcApi {
 }
 
 
-fun main(args: Array<String>) {
+fun main2(args: Array<String>) {
     //RpcApi.getBalance("0x61f63ddd3ccbfcaaa56dda1e5aa22298e31f53af").subscribe(System.out::print)
     //RpcApi.getBlockNumber().log().subscribe(System.out::print)
     //RpcApi.web3j.blockObservable(true).subscribe {

@@ -3,10 +3,10 @@ package com.github.rench.ddw.controller
 import com.github.rench.ddw.domain.Address
 import com.github.rench.ddw.domain.Block
 import com.github.rench.ddw.domain.Transaction
-import com.github.rench.ddw.service.IAddressService
-import com.github.rench.ddw.service.IBlockService
-import com.github.rench.ddw.service.TransactionService
+import com.github.rench.ddw.service.*
 import com.github.rench.ddw.vo.FetchResponse
+import org.apache.commons.lang3.math.NumberUtils
+import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -14,12 +14,13 @@ import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.math.BigInteger
+import javax.servlet.http.HttpServletRequest
 
 /**
  * transaction api
  */
 @RestController
-@RequestMapping("/tx")
+@RequestMapping("/api/tx")
 class TransactionController(private val service: TransactionService) {
 
     /**
@@ -52,7 +53,7 @@ class TransactionController(private val service: TransactionService) {
  * address api
  */
 @RestController
-@RequestMapping("/address")
+@RequestMapping("/api/address")
 class AddressController(private val service: IAddressService) {
     /**
      * return ddw address info
@@ -65,6 +66,12 @@ class AddressController(private val service: IAddressService) {
      */
     @RequestMapping("/top/{n}")
     fun top(@PathVariable("n") n: Int): Flux<Address> = service.top(n)
+
+    /**
+     * return the top n balance address info
+     */
+    @RequestMapping("/latest/{n}")
+    fun latest(@PathVariable("n") n: Int): Flux<Address> = service.latest(n)
 }
 
 /**
@@ -72,7 +79,7 @@ class AddressController(private val service: IAddressService) {
  */
 
 @RestController
-@RequestMapping("/block")
+@RequestMapping("/api/block")
 class BlockController(private val service: IBlockService) {
     /**
      * return the ddw block info with specified block number
@@ -97,4 +104,56 @@ class BlockController(private val service: IBlockService) {
      */
     @RequestMapping("/fetch")
     fun fetch(): Mono<FetchResponse> = service.fetch()
+}
+
+
+@RestController
+@RequestMapping("/api/statistics")
+class StatisticsController(private val summary: ISummaryService) {
+    @RequestMapping("/summary")
+    fun summary() = summary.summary()
+}
+
+/**
+ * page controller
+ */
+@Controller
+class PageController(private val block: IBlockService, private val address: IAddressService, private val tx: ITransactionService) {
+    @RequestMapping(value = ["", "/"])
+    fun home(): String = "redirect:/index"
+
+    @RequestMapping("/index")
+    fun index(): String = "index"
+
+    @RequestMapping("/address/{address}")
+    fun address(@PathVariable("address") addr: String, req: HttpServletRequest): String {
+        var save = address.address(addr)
+        req.setAttribute("address", save)
+        return "403"
+        //return "address"
+    }
+
+    @RequestMapping("/tx/{hash}")
+    fun transaction(@PathVariable("hash") hash: String, req: HttpServletRequest): String {
+        var save = tx.hash(hash).block()
+        if (save == null) {
+            return "404"
+        }
+        req.setAttribute("tx", save)
+        return "tx"
+    }
+
+    @RequestMapping("/block/{hash}")
+    fun block(@PathVariable("hash") hash: String, req: HttpServletRequest): String {
+        var save = block.hash(hash).block()
+        if (save == null && NumberUtils.isCreatable(hash)) {
+            save = block.block(BigInteger.valueOf(hash.toLong())).block()
+        }
+        if (save == null) {
+            return "404"
+        }
+        save.txs = tx.blockNum(save.number!!).collectList().block()
+        req.setAttribute("block", save)
+        return "block"
+    }
 }

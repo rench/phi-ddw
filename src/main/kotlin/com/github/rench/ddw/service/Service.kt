@@ -8,15 +8,16 @@ import com.github.rench.ddw.repository.BlockRepository
 import com.github.rench.ddw.repository.TransactionRepository
 import com.github.rench.ddw.rpc.RpcApi
 import com.github.rench.ddw.vo.FetchResponse
-import org.hibernate.annotations.Fetch
+import com.github.rench.ddw.vo.SummaryResponse
+import org.apache.commons.lang3.time.DateUtils
 import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
-import org.springframework.util.MultiValueMap
-import org.web3j.utils.Convert
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.math.BigInteger
+import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * transaction service interface
@@ -33,6 +34,7 @@ interface ITransactionService {
  */
 interface IAddressService {
     fun top(n: Int): Flux<Address>
+    fun latest(n: Int): Flux<Address>
     fun address(addr: String): Mono<Address>
 }
 
@@ -44,6 +46,13 @@ interface IBlockService {
     fun block(n: BigInteger): Mono<Block>
     fun hash(h: String): Mono<Block>
     fun fetch(): Mono<FetchResponse>
+}
+
+/**
+ * summary service
+ */
+interface ISummaryService {
+    fun summary(): Mono<SummaryResponse>
 }
 
 /**
@@ -97,6 +106,16 @@ class AddressService(private val dao: AddressRepository) : IAddressService {
         }
     }
 
+    override fun latest(n: Int): Flux<Address> {
+        return Flux.create {
+            when (n) {
+                5 -> dao.findTop5ByOrderByLastModifiedDateDesc().forEach { a -> it.next(a) }
+                else -> dao.findTop10ByOrderByLastModifiedDateDesc().forEach { a -> it.next(a) }
+            }
+            it.complete()
+        }
+    }
+
     override fun address(addr: String): Mono<Address> {
         return Mono.create {
             it.success(dao.findById(addr).orElse(null))
@@ -109,6 +128,7 @@ class AddressService(private val dao: AddressRepository) : IAddressService {
  */
 @Service
 class BlockService(private val dao: BlockRepository, private val txDao: TransactionRepository, private val addrDao: AddressRepository) : IBlockService {
+    private val isListen: AtomicBoolean = AtomicBoolean(false)
     override fun latest(n: Int): Flux<Block> {
         return Flux.create {
             when (n) {
@@ -136,6 +156,13 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
         var last = (block?.number ?: BigInteger.ZERO).longValueExact()
         var max = RpcApi.getBlockNumber().block().longValueExact()
         val cur = kotlin.math.min(last + 10000, max)
+        if (!isListen.get()) {
+            RpcApi.web3j.blockObservable(false).subscribe {
+                System.out.println(it.block.number)
+                fetch().block()
+            }
+            isListen.set(true)
+        }
         return Mono.create {
             var fs = mutableListOf<CompletableFuture<Boolean>>()
             var set: MutableSet<String> = HashSet()
@@ -165,7 +192,7 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
             fs.clear()
             set.forEach {
                 var bal = RpcApi.getBalance(it).block()
-                var addr:Address
+                var addr: Address
                 if (addrDao.existsById(it)) {
                     addr = addrDao.findById(it).get()
                     addr.balance = bal
@@ -179,6 +206,23 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
             }
             val resp = FetchResponse(BigInteger.valueOf(cur), BigInteger.valueOf(last), BigInteger.valueOf(max))
             it.success(resp)
+        }
+    }
+
+}
+
+@Service
+class SummaryService(private val blockDao: BlockRepository, private val txDao: TransactionRepository, private val addrDao: AddressRepository) : ISummaryService {
+    override fun summary(): Mono<SummaryResponse> {
+        return Mono.create {
+            val tx = txDao.count()
+            val addr = addrDao.count()
+            val block = blockDao.count()
+            val day = DateUtils.addDays(Date(), -7)
+            val tx7Day = txDao.countByCreatedDateGreaterThan(day)
+            val addr7Day = addrDao.countByCreatedDateGreaterThan(day)
+            val block7Day = blockDao.countByCreatedDateGreaterThan(day)
+            it.success(SummaryResponse(addr, tx, block, addr7Day, tx7Day, block7Day))
         }
     }
 

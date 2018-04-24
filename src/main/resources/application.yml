@@ -26,9 +26,9 @@ spring:
   datasource:
     testWhileIdle: true
     validationQuery: select 1
-    url: jdbc:mysql://localhost:3306/phi-ddw?useUnicdoe=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
-    username: root
-    password: root
+    url: jdbc:mysql://192.168.1.17:3306/phi-ddw?useUnicdoe=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+    username: test
+    password: Aa123456.
     sql-script-encoding: utf-8
     driver-class-name: com.mysql.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
