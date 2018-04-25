@@ -10,6 +10,8 @@ import com.github.rench.ddw.rpc.RpcApi
 import com.github.rench.ddw.vo.FetchResponse
 import com.github.rench.ddw.vo.SummaryResponse
 import org.apache.commons.lang3.time.DateUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -18,6 +20,7 @@ import java.math.BigInteger
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.stream.Collectors
 
 /**
  * transaction service interface
@@ -128,7 +131,9 @@ class AddressService(private val dao: AddressRepository) : IAddressService {
  */
 @Service
 class BlockService(private val dao: BlockRepository, private val txDao: TransactionRepository, private val addrDao: AddressRepository) : IBlockService {
+    private val log: Logger = LoggerFactory.getLogger(BlockService::class.java)
     private val isListen: AtomicBoolean = AtomicBoolean(false)
+    private val isDoing: AtomicBoolean = AtomicBoolean(false)
     override fun latest(n: Int): Flux<Block> {
         return Flux.create {
             when (n) {
@@ -152,17 +157,21 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
     }
 
     override fun fetch(): Mono<FetchResponse> {
+        if (!isListen.get() && isListen.compareAndSet(false, true)) {
+            RpcApi.web3j.blockObservable(true).subscribe {
+                log.info("new block {}", it.block.number)
+                fetch().block()
+            }
+        }
+        if (isDoing.get() || !isDoing.compareAndSet(false, true)) {
+            log.info("other thread is fetching")
+            return Mono.empty()
+        }
+        log.info("start fetching")
         var block = dao.findFirstByOrderByNumberDesc()
         var last = (block?.number ?: BigInteger.ZERO).longValueExact()
         var max = RpcApi.getBlockNumber().block().longValueExact()
-        val cur = kotlin.math.min(last + 10000, max)
-        if (!isListen.get()) {
-            RpcApi.web3j.blockObservable(false).subscribe {
-                System.out.println(it.block.number)
-                fetch().block()
-            }
-            isListen.set(true)
-        }
+        val cur = kotlin.math.min(last + 5000, max)
         return Mono.create {
             var fs = mutableListOf<CompletableFuture<Boolean>>()
             var set: MutableSet<String> = HashSet()
@@ -183,12 +192,14 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
                         if (tx.fromAddress != null) set.add(tx.fromAddress!!)
                         if (tx.toAddress != null) set.add(tx.toAddress!!)
                         tx
-                    }.collectList().block()
+                    }.toStream().filter { txDao.existsByHash(it.hash!!) }.collect(Collectors.toList())
                     txDao.saveAll(txs)
                     true
                 }
             }
-            CompletableFuture.allOf(*fs.toTypedArray()).join()
+            if (fs.size > 0) {
+                CompletableFuture.allOf(*fs.toTypedArray()).join()
+            }
             fs.clear()
             set.forEach {
                 var bal = RpcApi.getBalance(it).block()
@@ -205,6 +216,8 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
                 addrDao.save(addr)
             }
             val resp = FetchResponse(BigInteger.valueOf(cur), BigInteger.valueOf(last), BigInteger.valueOf(max))
+            isDoing.set(false)
+            log.info("fetch done")
             it.success(resp)
         }
     }

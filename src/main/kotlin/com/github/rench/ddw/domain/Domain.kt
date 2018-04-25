@@ -47,6 +47,7 @@ data class Transaction(
         var gas: BigInteger? = null,
         @Column(name = "gas_price")
         var gasPrice: BigInteger? = null,
+        @Column(unique = true)
         var hash: String? = null,
         var input: String? = null,
         var nonce: String? = null,

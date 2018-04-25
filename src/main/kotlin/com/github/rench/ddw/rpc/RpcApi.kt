@@ -23,19 +23,19 @@ object RpcApi {
      */
     fun getBalance(address: String) =
             Mono.justOrEmpty(
-                    web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).sendAsync().get().balance
+                    web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().balance
             )
 
     /**
      * query the transaction count with specified address from rpc client
      */
     fun getTransactionCount(address: String) =
-            Mono.just(web3j.ethGetTransactionCount(address, DefaultBlockParameterName.PENDING).sendAsync().get().transactionCount)
+            Mono.just(web3j.ethGetTransactionCount(address, DefaultBlockParameterName.PENDING).send().transactionCount)
 
     /**
      * query the current block number from rpc client
      */
-    fun getBlockNumber() = Mono.justOrEmpty(web3j.ethBlockNumber().sendAsync().get().blockNumber)
+    fun getBlockNumber() = Mono.justOrEmpty(web3j.ethBlockNumber().send().blockNumber)
 
     /**
      * query the transactions in specified block number
@@ -47,7 +47,7 @@ object RpcApi {
                 it.next(
                         web3j.ethGetTransactionByBlockNumberAndIndex(
                                 DefaultBlockParameter.valueOf(number),
-                                BigInteger.valueOf(i)).sendAsync().get().transaction.get()
+                                BigInteger.valueOf(i)).send().transaction.get()
                 )
             it.complete()
         }
@@ -63,7 +63,7 @@ object RpcApi {
                 it.next(
                         web3j.ethGetTransactionByBlockHashAndIndex(
                                 hash,
-                                BigInteger.valueOf(i)).sendAsync().get().transaction.get()
+                                BigInteger.valueOf(i)).send().transaction.get()
                 )
             it.complete()
         }
@@ -74,7 +74,7 @@ object RpcApi {
      */
     fun getTransactionFromTxHash(hash: String): Mono<Transaction> {
         return Mono.just(
-                web3j.ethGetTransactionByHash(hash).sendAsync().get().transaction.get()
+                web3j.ethGetTransactionByHash(hash).send().transaction.get()
         )
     }
 
@@ -83,7 +83,7 @@ object RpcApi {
      */
     fun getBlock(number: BigInteger): Mono<EthBlock.Block> {
         return Mono.just(
-                web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(number), false).sendAsync().get().block
+                web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(number), false).send().block
         )
     }
 

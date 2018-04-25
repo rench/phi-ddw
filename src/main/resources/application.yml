@@ -32,6 +32,8 @@ spring:
     sql-script-encoding: utf-8
     driver-class-name: com.mysql.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      max-lifetime: 600000
   jpa:
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
     generate-ddl: true
