@@ -192,7 +192,7 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
                         if (tx.fromAddress != null) set.add(tx.fromAddress!!)
                         if (tx.toAddress != null) set.add(tx.toAddress!!)
                         tx
-                    }.toStream().filter { txDao.existsByHash(it.hash!!) }.collect(Collectors.toList())
+                    }.toStream().filter { !txDao.existsByHash(it.hash!!) }.collect(Collectors.toList())
                     txDao.saveAll(txs)
                     true
                 }
