@@ -105,17 +105,18 @@
                   <table class="table table-bordered table-hover">
                     <tr>
                       <th class="text-center" style="width: 1%"></th>
-                      <th class="text-center">Transaction Hash</th>
+
                       <th class="text-center">From</th>
                       <th class="text-center">To</th>
                       <th class="text-center" style="width: 1%">Value</th>
+                      <th class="text-center">Transaction Hash</th>
                     </tr>
                     <tr th:each="tx : *{txs}">
                       <td class="text-center">*</td>
-                      <td class="text-center" th:text="${tx.hash}"></td>
-                      <td class="text-center" th:text="${tx.fromAddress}">0xd2476de5374c40231180a1f1f0547d6ba571cedf</td>
-                      <td class="text-center" th:text="${tx.toAddress}">0xc748bbc21666f8ea7df4a0d3481bc4de7c6b59e6</td>
-                      <td class="text-center" th:text="${tx.value}/100000000000000000">10000</td>
+                      <td class="text-center"><span th:text="${tx.fromAddress}">0xd2476de5374c40231180a1f1f0547d6ba571cedf</span></td>
+                      <td class="text-center"><span th:text="${tx.toAddress}">0xc748bbc21666f8ea7df4a0d3481bc4de7c6b59e6</span></td>
+                      <td class="text-center"><span th:text="${tx.value}/1000000000000000000" class="text-orange">10000</span></td>
+                      <td class="text-center"><span th:text="${tx.hash}">hash</span></td>
                     </tr>
                   </table>
                 </div>

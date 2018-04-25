@@ -98,7 +98,7 @@ class TransactionService(private val dao: TransactionRepository) : ITransactionS
  * address service impl
  */
 @Service
-class AddressService(private val dao: AddressRepository) : IAddressService {
+class AddressService(private val dao: AddressRepository, private val txDao: TransactionRepository) : IAddressService {
     override fun top(n: Int): Flux<Address> {
         return Flux.create {
             when (n) {
@@ -121,7 +121,11 @@ class AddressService(private val dao: AddressRepository) : IAddressService {
 
     override fun address(addr: String): Mono<Address> {
         return Mono.create {
-            it.success(dao.findById(addr).orElse(null))
+            var address = dao.findById(addr).orElse(null)
+            if (address != null) {
+                address.txs = txDao.findTop30ByFromAddressOrToAddressOrderByTimestampDesc(address.address!!, address.address!!)
+            }
+            it.success(address)
         }
     }
 }

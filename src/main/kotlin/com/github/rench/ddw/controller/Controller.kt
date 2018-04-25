@@ -127,18 +127,14 @@ class PageController(private val block: IBlockService, private val address: IAdd
 
     @RequestMapping("/address/{address}")
     fun address(@PathVariable("address") addr: String, req: HttpServletRequest): String {
-        var save = address.address(addr)
-        req.setAttribute("address", save)
-        return "403"
-        //return "address"
+        var save = address.address(addr).block() ?: return "404"
+        req.setAttribute("addr", save)
+        return "address"
     }
 
     @RequestMapping("/tx/{hash}")
     fun transaction(@PathVariable("hash") hash: String, req: HttpServletRequest): String {
-        var save = tx.hash(hash).block()
-        if (save == null) {
-            return "404"
-        }
+        var save: Transaction? = tx.hash(hash).block() ?: return "404"
         req.setAttribute("tx", save)
         return "tx"
     }

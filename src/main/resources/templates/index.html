@@ -94,7 +94,7 @@
               <div class="col-6 col-sm-4 col-lg-2">
                 <div class="card">
                   <div class="card-body p-3 text-center">
-                    <div class="h1 m-0" id="ddw-address">-</div>
+                    <div class="h1 m-0 text-orange" id="ddw-address">-</div>
                     <div class="text-muted mb-4">DDW-Address</div>
                   </div>
                 </div>
@@ -102,7 +102,7 @@
               <div class="col-6 col-sm-4 col-lg-2">
                 <div class="card">
                   <div class="card-body p-3 text-center">
-                    <div class="h1 m-0" id="ddw-transaction">-</div>
+                    <div class="h1 m-0 text-azure" id="ddw-transaction">-</div>
                     <div class="text-muted mb-4">DDW-Transaction</div>
                   </div>
                 </div>
@@ -110,7 +110,7 @@
               <div class="col-6 col-sm-4 col-lg-2">
                 <div class="card">
                   <div class="card-body p-3 text-center">
-                    <div class="h1 m-0" id="ddw-block">-</div>
+                    <div class="h1 m-0 text-pink" id="ddw-block">-</div>
                     <div class="text-muted mb-4">DDW-Block</div>
                   </div>
                 </div>
@@ -118,7 +118,7 @@
               <div class="col-6 col-sm-4 col-lg-2">
                 <div class="card">
                   <div class="card-body p-3 text-center">
-                    <div class="h1 m-0" id="ddw-address-7day">-</div>
+                    <div class="h1 m-0 text-orange" id="ddw-address-7day">-</div>
                     <div class="text-muted mb-4">7 day DDW-Address</div>
                   </div>
                 </div>
@@ -126,7 +126,7 @@
               <div class="col-6 col-sm-4 col-lg-2">
                 <div class="card">
                   <div class="card-body p-3 text-center">
-                    <div class="h1 m-0" id="ddw-transaction-7day">-</div>
+                    <div class="h1 m-0 text-azure" id="ddw-transaction-7day">-</div>
                     <div class="text-muted mb-4">7 day DDW-Transaction</div>
                   </div>
                 </div>
@@ -134,7 +134,7 @@
               <div class="col-6 col-sm-4 col-lg-2">
                 <div class="card">
                   <div class="card-body p-3 text-center">
-                    <div class="h1 m-0" id="ddw-block-7day">-</div>
+                    <div class="h1 m-0 text-pink" id="ddw-block-7day">-</div>
                     <div class="text-muted mb-4">7 day DDW-Block</div>
                   </div>
                 </div>
@@ -320,9 +320,9 @@
             let html = '';
             for(x in data){
               html+= `<tr>
-                      <td width="1"><i class="fa fa-chrome text-muted"></i></td>
-                      <td><a href="/address/${data[x].address}">${data[x].address}</a></td>
-                      <td class="text-right"><span class="text-muted">${data[x].balance/100000000000000000}</span></td>
+                      <td width="1"><i class="fa fa-chrome"></i></td>
+                      <td><a href="/address/${data[x].address}" class="text-green">${data[x].address}</a></td>
+                      <td class="text-right"><span class="text-muted text-orange">${data[x].balance/1000000000000000000}</span></td>
                     </tr>`
             }
             $('#latest-address').html(html)
@@ -338,7 +338,7 @@
               html+= `<tr>
                           <td>
                             <span class="text-muted">
-                              <a href="/block/${data[x].blockNumber}" class="text-inherit">
+                              <a href="/block/${data[x].blockNumber}" class="text-inherit text-pink">
                                 ${data[x].blockNumber}
                               </a>
                             </span>
@@ -348,13 +348,13 @@
                             <a href="/address/${data[x].toAddress}" class="text-inherit">${data[x].toAddress}</a>
                           </td>
                           <td>
-                            ${data[x].value/100000000000000000}
+                            <span class="text-orange">${data[x].value/1000000000000000000}</span>
                           </td>
                           <td>
                             ${DateFormat.format(new Date(data[x].timestamp * 1000),"yyyy-MM-dd hh:mm:ss")}
                           </td>
                           <td>
-                            <span class="status-icon bg-success"></span> SUCCESS
+                            <i class="fe fe-check text-success mr-2" aria-hidden="true"></i>
                           </td>
                         </tr>`
             }

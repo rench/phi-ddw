@@ -25,7 +25,9 @@ data class Address(
         var createdDate: Date? = null,
         @LastModifiedDate
         @Column(name = "last_modified_date")
-        var lastModifiedDate: Date? = null
+        var lastModifiedDate: Date? = null,
+        @Transient
+        var txs: List<Transaction>? = null
 )
 
 /**

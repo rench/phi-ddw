@@ -16,7 +16,8 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun findByBlockNumber(num: BigInteger): List<Transaction>
     fun findByBlockHash(hash: String): List<Transaction>
     fun countByCreatedDateGreaterThan(date: Date): Long
-    fun existsByHash(hash:String): Boolean
+    fun existsByHash(hash: String): Boolean
+    fun findTop30ByFromAddressOrToAddressOrderByTimestampDesc(from: String, to: String): List<Transaction>
 }
 
 @Repository

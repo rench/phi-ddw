@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
@@ -38,7 +39,7 @@
         <div class="header py-4">
           <div class="container">
             <div class="d-flex">
-              <a class="header-brand" href="./index">
+              <a class="header-brand" href="/index">
                 <span>Phi-DDW</span>
               </a>
               <div class="d-flex order-lg-2 ml-auto">
@@ -63,44 +64,57 @@
                 </form>
               </div>
               <div class="col-lg order-lg-first">
-                <ul class="nav nav-tabs border-0 flex-column flex-lg-row">
-                  <li class="nav-item">
-                    <a href="/index" class="nav-link"><i class="fe fe-home"></i>Home</a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link"><i class="fe fe-box"></i>Blocks</a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link active"><i class="fe fe-calendar"></i>Transactions</a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link"><i class="fe fe-file-text"></i>Address</a>
-                  </li>
-                </ul>
-              </div>
+                  <ul class="nav nav-tabs border-0 flex-column flex-lg-row">
+                    <li class="nav-item">
+                      <a href="/index" class="nav-link"><i class="fe fe-home"></i>Home</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link active"><i class="fe fe-box"></i>Blocks</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link"><i class="fe fe-calendar"></i>Transactions</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link"><i class="fe fe-file-text"></i>Address</a>
+                    </li>
+                  </ul>
+                </div>
             </div>
           </div>
         </div>
         <div class="my-3 my-md-5">
-          <div class="container" th:object="${tx}">
+          <div class="container" th:object="${addr}">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title" th:text="*{hash}">#0xf150ce8f0e0e51413742dd7f45020511561ddfad322fa059dffc1e3b51f8b14f</h3>
+                <h3 class="card-title" th:text="*{address}">#951511</h3>
               </div>
               <div class="card-body">
                 <div class="row my-8">
                   <div class="col-6">
-                    <p class="h3">Transaction Info</p>
+                    <p class="h3">Address Info</p>
                     <address>
-                      Hash: <span th:text="*{hash}">hash</span><br>
-                      Height: <span th:text="*{blockNumber}">blockNumber</span><br>
-                      Gas: <span th:text="*{gas}">Gas</span><br>
-                      GasPrice: <span th:text="*{gasPrice}">GasPrice</span><br>
-                      From: <span th:text="*{fromAddress}">fromAddress</span><br>
-                      To: <span th:text="*{toAddress}">toAddress</span><br>
-                      Value: <span th:text="*{value}/1000000000000000000" class="text-orange">Value</span><br>
+                      Address: <span th:text="*{address}" class="h3 text-green"></span> <br>
+                      Balance: <span th:text="*{balance}/1000000000000000000" class="h1 text-orange">Balance</span><br>
                     </address>
                   </div>
+                </div>
+                <div class="table-responsive push">
+                  <table class="table table-bordered table-hover">
+                    <tr>
+                      <th class="text-center" style="width: 1%"></th>
+                      <th class="text-center">From</th>
+                      <th class="text-center">To</th>
+                      <th class="text-center" style="width: 1%">Value</th>
+                      <th class="text-center">Transaction Hash</th>
+                    </tr>
+                    <tr th:each="tx : *{txs}">
+                      <td class="text-center">*</td>
+                      <td class="text-center"><span th:text="${tx.fromAddress}" th:class="${tx.fromAddress}==*{address}?'text-green':'xx'">0xd2476de5374c40231180a1f1f0547d6ba571cedf</span></td>
+                      <td class="text-center"><span th:text="${tx.toAddress}" th:class="${tx.toAddress}==*{address}?'text-green':'xx'">0xc748bbc21666f8ea7df4a0d3481bc4de7c6b59e6</span></td>
+                      <td class="text-center"><span th:text="${tx.value}/1000000000000000000" class="text-orange">10000</span></td>
+                      <td class="text-center"><span th:text="${tx.hash}">hash</span></td>
+                    </tr>
+                  </table>
                 </div>
               </div>
             </div>
