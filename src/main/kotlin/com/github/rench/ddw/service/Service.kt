@@ -13,6 +13,7 @@ import org.apache.commons.lang3.time.DateUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -136,7 +137,6 @@ class AddressService(private val dao: AddressRepository, private val txDao: Tran
 @Service
 class BlockService(private val dao: BlockRepository, private val txDao: TransactionRepository, private val addrDao: AddressRepository) : IBlockService {
     private val log: Logger = LoggerFactory.getLogger(BlockService::class.java)
-    private val isListen: AtomicBoolean = AtomicBoolean(false)
     private val isDoing: AtomicBoolean = AtomicBoolean(false)
     override fun latest(n: Int): Flux<Block> {
         return Flux.create {
@@ -161,69 +161,71 @@ class BlockService(private val dao: BlockRepository, private val txDao: Transact
     }
 
     override fun fetch(): Mono<FetchResponse> {
-        if (!isListen.get() && isListen.compareAndSet(false, true)) {
-            RpcApi.web3j.blockObservable(true).subscribe {
-                log.info("new block {}", it.block.number)
-                fetch().block()
-            }
-        }
-        if (isDoing.get() || !isDoing.compareAndSet(false, true)) {
-            log.info("other thread is fetching")
-            return Mono.empty()
-        }
         log.info("start fetching")
         var block = dao.findFirstByOrderByNumberDesc()
         var last = (block?.number ?: BigInteger.ZERO).longValueExact()
         var max = RpcApi.getBlockNumber().block().longValueExact()
-        val cur = kotlin.math.min(last + 5000, max)
+        val cur = kotlin.math.min(last + 2000, max)
         return Mono.create {
-            var fs = mutableListOf<CompletableFuture<Boolean>>()
-            var set: MutableSet<String> = HashSet()
-            (last + 1..cur).mapTo(fs) { i ->
-                CompletableFuture.supplyAsync {
-                    var block = RpcApi.getBlock(BigInteger.valueOf(i)).block()
-                    var save = Block()
-                    BeanUtils.copyProperties(block, save)
-                    save.transactionCount = block.transactions.size.toLong()
-                    dao.save(save)
-                    var txs = RpcApi.getTransactionsFromBlock(BigInteger.valueOf(i)).map {
-                        var tx = Transaction()
-                        BeanUtils.copyProperties(it, tx)
-                        tx.fromAddress = it.from
-                        tx.toAddress = it.to
-                        tx.timestamp = block.timestamp.toLong()
-                        tx.input = null
-                        if (tx.fromAddress != null) set.add(tx.fromAddress!!)
-                        if (tx.toAddress != null) set.add(tx.toAddress!!)
-                        tx
-                    }.toStream().filter { !txDao.existsByHash(it.hash!!) }.collect(Collectors.toList())
-                    txDao.saveAll(txs)
-                    true
+            if (isDoing.get() || !isDoing.compareAndSet(false, true)) {
+                log.info("other thread is fetching")
+                it.success()
+            } else {
+                var fs = mutableListOf<CompletableFuture<Boolean>>()
+                var set: MutableSet<String> = HashSet()
+                try {
+                    (last + 1..cur).mapTo(fs) { i ->
+                        CompletableFuture.supplyAsync {
+                            var block = RpcApi.getBlock(BigInteger.valueOf(i)).block()
+                            var save = Block()
+                            BeanUtils.copyProperties(block, save)
+                            save.transactionCount = block.transactions.size.toLong()
+                            var txs = RpcApi.getTransactionsFromBlock(BigInteger.valueOf(i)).map {
+                                var tx = Transaction()
+                                BeanUtils.copyProperties(it, tx)
+                                tx.fromAddress = it.from
+                                tx.toAddress = it.to
+                                tx.timestamp = block.timestamp.toLong()
+                                tx.input = null
+                                if (tx.fromAddress != null) set.add(tx.fromAddress!!)
+                                if (tx.toAddress != null) set.add(tx.toAddress!!)
+                                tx
+                            }.toStream().filter { !txDao.existsByHash(it.hash!!) }.collect(Collectors.toList())
+                            txDao.saveAll(txs)
+                            dao.save(save)
+                            true
+                        }
+                    }
+                    if (fs.size > 0) {
+                        CompletableFuture.allOf(*fs.toTypedArray()).join()
+                    }
+                    set.map {
+                        var bal = RpcApi.getBalance(it).block()
+                        var addr: Address
+                        if (addrDao.existsById(it)) {
+                            addr = addrDao.findById(it).get()
+                            addr.balance = bal
+                        } else {
+                            addr = Address()
+                            addr.address = it
+                            addr.balance = bal
+                            addr.transactionCount = BigInteger.valueOf(0)
+                        }
+                        addr
+                    }.let { addrDao.saveAll(it) }
+                    val resp = FetchResponse(BigInteger.valueOf(cur), BigInteger.valueOf(last), BigInteger.valueOf(max))
+                    it.success(resp)
+                } finally {
+                    isDoing.set(false)
+                    log.info("fetch done")
                 }
             }
-            if (fs.size > 0) {
-                CompletableFuture.allOf(*fs.toTypedArray()).join()
-            }
-            fs.clear()
-            set.forEach {
-                var bal = RpcApi.getBalance(it).block()
-                var addr: Address
-                if (addrDao.existsById(it)) {
-                    addr = addrDao.findById(it).get()
-                    addr.balance = bal
-                } else {
-                    addr = Address()
-                    addr.address = it
-                    addr.balance = bal
-                    addr.transactionCount = BigInteger.valueOf(0)
-                }
-                addrDao.save(addr)
-            }
-            val resp = FetchResponse(BigInteger.valueOf(cur), BigInteger.valueOf(last), BigInteger.valueOf(max))
-            isDoing.set(false)
-            log.info("fetch done")
-            it.success(resp)
         }
+    }
+
+    @Scheduled(cron = "0 */1 * * * ?")
+    fun autoFetch() {
+        fetch().block()
     }
 
 }
